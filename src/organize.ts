@@ -5,6 +5,10 @@ const ORGANIZED_CLASS = "tag-org-organized";
 const UNORGANIZED_CLASS = "tag-org-unorganized";
 const PROCESSED_ATTR = "data-tag-organizer";
 
+function getMainDocument(): Document {
+  return top?.document ?? document;
+}
+
 /**
  * Recursively extract all [[page]] references from a block tree.
  */
@@ -35,15 +39,14 @@ function extractRefsFromBlocks(blocks: BlockEntity[]): Set<string> {
 }
 
 /**
- * Find the "Pages tagged with" container in the DOM.
+ * Find the "Pages tagged with" container in the main Logseq DOM.
  */
 function findTaggedPagesContainer(): Element | null {
-  return document.querySelector(".references.page-tags");
+  return getMainDocument().querySelector(".references.page-tags");
 }
 
 /**
  * Extract page name from a tagged page list item.
- * The page name is in an <a> with data-ref attribute, or in the text content.
  */
 function getPageNameFromItem(item: Element): string | null {
   const link = item.querySelector("a[data-ref]");
@@ -83,7 +86,8 @@ export async function processTaggedPages(): Promise<void> {
   const blocks = await logseq.Editor.getPageBlocksTree(pageName);
   const refs = extractRefsFromBlocks(blocks);
 
-  const items = container.querySelectorAll(".references-blocks-item");
+  const items = container.querySelectorAll(".initial ul > li");
+
   if (items.length === 0) {
     return;
   }
